@@ -11,8 +11,20 @@ import EditProfile from '../components/EditProfile';
 import AddExperienceModal from '../components/AddExperienceModal';
 import AddEducationModal from '../components/AddEducationModal';
 import AddCertificationModal from '../components/AddCertificationModal';
+import AddSocialsModal from '../components/AddSocialsModal';
+import EditSocialsModal from '../components/EditSocialsModal';
+import CareerVisionModal from '../components/CareerVisionModal';
+import Projects from '../components/Projects';
+import AddProjectModal from '../components/AddProjectModal';
 
-import { getProfile, endorseSkill, addSkill, updateProfile, addExperience, addEducation, addCertification } from '../services/api';
+import {
+    getProfile, endorseSkill, addSkill, updateProfile,
+    addExperience, addEducation, addCertification,
+    addSocial, updateSocial, deleteSocial, updateCareerVision,
+    updateExperience, deleteExperience, updateEducation, deleteEducation,
+    updateCertification, deleteCertification,
+    addProject, updateProject, deleteProject
+} from '../services/api';
 
 const ProfilePage = () => {
     const [profile, setProfile] = useState(null);
@@ -21,8 +33,13 @@ const ProfilePage = () => {
         editProfile: false,
         addExp: false,
         addEdu: false,
-        addCert: false
+        addCert: false,
+        addSocial: false,
+        editSocial: false,
+        careerVision: false,
+        addProject: false
     });
+    const [editingItem, setEditingItem] = useState(null);
 
     useEffect(() => {
         loadProfile();
@@ -57,27 +74,122 @@ const ProfilePage = () => {
         } catch (error) { console.error(error); }
     };
 
-    const handleAddExperience = async (data) => {
+    const handleSaveExperience = async (data) => {
         try {
-            const res = await addExperience(data);
+            let res;
+            if (editingItem && editingItem._id) {
+                res = await updateExperience(editingItem._id, data);
+            } else {
+                res = await addExperience(data);
+            }
             setProfile(res.data);
             setModalState(prev => ({ ...prev, addExp: false }));
+            setEditingItem(null);
         } catch (error) { console.error(error); }
     };
 
-    const handleAddEducation = async (data) => {
+    const handleDeleteExperience = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this experience?")) return;
         try {
-            const res = await addEducation(data);
+            const res = await deleteExperience(id);
+            setProfile(res.data);
+        } catch (error) { console.error(error); }
+    };
+
+    const handleSaveEducation = async (data) => {
+        try {
+            let res;
+            if (editingItem && editingItem._id) {
+                res = await updateEducation(editingItem._id, data);
+            } else {
+                res = await addEducation(data);
+            }
             setProfile(res.data);
             setModalState(prev => ({ ...prev, addEdu: false }));
+            setEditingItem(null);
         } catch (error) { console.error(error); }
     };
 
-    const handleAddCertification = async (data) => {
+    const handleDeleteEducation = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this education?")) return;
         try {
-            const res = await addCertification(data);
+            const res = await deleteEducation(id);
+            setProfile(res.data);
+        } catch (error) { console.error(error); }
+    };
+
+    const handleSaveCertification = async (data) => {
+        try {
+            let res;
+            if (editingItem && editingItem._id) {
+                res = await updateCertification(editingItem._id, data);
+            } else {
+                res = await addCertification(data);
+            }
             setProfile(res.data);
             setModalState(prev => ({ ...prev, addCert: false }));
+            setEditingItem(null);
+        } catch (error) { console.error(error); }
+    };
+
+    const handleDeleteCertification = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this certification?")) return;
+        try {
+            const res = await deleteCertification(id);
+            setProfile(res.data);
+        } catch (error) { console.error(error); }
+    };
+
+    const handleSaveProject = async (data) => {
+        try {
+            let res;
+            if (editingItem && editingItem._id) {
+                res = await updateProject(editingItem._id, data);
+            } else {
+                res = await addProject(data);
+            }
+            setProfile(res.data);
+            setModalState(prev => ({ ...prev, addProject: false }));
+            setEditingItem(null);
+        } catch (error) { console.error(error); }
+    }
+
+    const handleDeleteProject = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this project?")) return;
+        try {
+            const res = await deleteProject(id);
+            setProfile(res.data);
+        } catch (error) { console.error(error); }
+    };
+
+    // New Handlers
+    const handleAddSocial = async (data) => {
+        try {
+            const res = await addSocial(data);
+            setProfile(res.data);
+            setModalState(prev => ({ ...prev, addSocial: false }));
+        } catch (error) { console.error(error); }
+    };
+
+    const handleUpdateSocial = async (platform, link) => {
+        try {
+            const res = await updateSocial({ platform, link });
+            setProfile(res.data);
+        } catch (error) { console.error(error); }
+    };
+
+    const handleDeleteSocial = async (platform) => {
+        try {
+            const res = await deleteSocial(platform);
+            setProfile(res.data);
+        } catch (error) { console.error(error); }
+    };
+
+    const handleUpdateCareerVision = async (data) => {
+        try {
+            const res = await updateCareerVision(data);
+            setProfile(res.data);
+            setModalState(prev => ({ ...prev, careerVision: false }));
         } catch (error) { console.error(error); }
     };
 
@@ -90,7 +202,13 @@ const ProfilePage = () => {
 
             <div className="container page-content">
                 {/* Header Section */}
-                <ProfileHeader profile={profile} onEdit={() => setModalState({ ...modalState, editProfile: true })} />
+                <ProfileHeader
+                    profile={profile}
+                    onEdit={() => setModalState(prev => ({ ...prev, editProfile: true }))}
+                    onAddSocial={() => setModalState(prev => ({ ...prev, addSocial: true }))}
+                    onEditSocial={() => setModalState(prev => ({ ...prev, editSocial: true }))}
+                    onCareerVision={() => setModalState(prev => ({ ...prev, careerVision: true }))}
+                />
 
                 {/* Career Vision Section */}
                 <div style={{ marginBottom: '24px' }}>
@@ -111,25 +229,31 @@ const ProfilePage = () => {
 
                     {/* Right Column */}
                     <div className="flex flex-col gap-6">
-                        <div style={{ position: 'relative' }}>
-                            <Experience experience={profile.experience} />
-                            {/* Overlay the plus button action */}
-                            <div style={{ position: 'absolute', top: '24px', right: '24px', pointerEvents: 'none' }}>
-                                {/* Transparent hit area or handled via prop in component if refactored. 
-                                     For now, let's wrap the component or reuse the button inside it.
-                                     Actually, I need to pass the "onAdd" prop to Experience if I want that + button to work.
-                                     Let's modify Experience.jsx, Education.jsx, Certification.jsx to accept onAdd prop.
-                                 */}
-                            </div>
-                        </div>
+                        <Experience
+                            experience={profile.experience}
+                            onAdd={() => { setEditingItem(null); setModalState(prev => ({ ...prev, addExp: true })); }}
+                            onEdit={(item) => { setEditingItem(item); setModalState(prev => ({ ...prev, addExp: true })); }}
+                            onDelete={handleDeleteExperience}
+                        />
+                        <Education
+                            education={profile.education}
+                            onAdd={() => { setEditingItem(null); setModalState(prev => ({ ...prev, addEdu: true })); }}
+                            onEdit={(item) => { setEditingItem(item); setModalState(prev => ({ ...prev, addEdu: true })); }}
+                            onDelete={handleDeleteEducation}
+                        />
+                        <Certification
+                            certifications={profile.certifications}
+                            onAdd={() => { setEditingItem(null); setModalState(prev => ({ ...prev, addCert: true })); }}
+                            onEdit={(item) => { setEditingItem(item); setModalState(prev => ({ ...prev, addCert: true })); }}
+                            onDelete={handleDeleteCertification}
+                        />
 
-                        {/* 
-                           I need to pass the open modal handlers to the components so their + buttons work.
-                           I will update Experience, Education, Certification components to accept an onAdd prop.
-                        */}
-                        <Experience experience={profile.experience} onAdd={() => setModalState({ ...modalState, addExp: true })} />
-                        <Education education={profile.education} onAdd={() => setModalState({ ...modalState, addEdu: true })} />
-                        <Certification certifications={profile.certifications} onAdd={() => setModalState({ ...modalState, addCert: true })} />
+                        <Projects
+                            projects={profile.projects}
+                            onAdd={() => { setEditingItem(null); setModalState(prev => ({ ...prev, addProject: true })); }}
+                            onEdit={(item) => { setEditingItem(item); setModalState(prev => ({ ...prev, addProject: true })); }}
+                            onDelete={handleDeleteProject}
+                        />
                     </div>
                 </div>
             </div>
@@ -139,26 +263,57 @@ const ProfilePage = () => {
                 <EditProfile
                     profile={profile}
                     onSave={handleUpdateProfile}
-                    onClose={() => setModalState({ ...modalState, editProfile: false })}
+                    onClose={() => setModalState(prev => ({ ...prev, editProfile: false }))}
                 />
             )}
 
             <AddExperienceModal
                 isOpen={modalState.addExp}
-                onClose={() => setModalState({ ...modalState, addExp: false })}
-                onAdd={handleAddExperience}
+                onClose={() => { setModalState(prev => ({ ...prev, addExp: false })); setEditingItem(null); }}
+                onAdd={handleSaveExperience}
+                initialData={editingItem}
             />
 
             <AddEducationModal
                 isOpen={modalState.addEdu}
-                onClose={() => setModalState({ ...modalState, addEdu: false })}
-                onAdd={handleAddEducation}
+                onClose={() => { setModalState(prev => ({ ...prev, addEdu: false })); setEditingItem(null); }}
+                onAdd={handleSaveEducation}
+                initialData={editingItem}
             />
 
             <AddCertificationModal
                 isOpen={modalState.addCert}
-                onClose={() => setModalState({ ...modalState, addCert: false })}
-                onAdd={handleAddCertification}
+                onClose={() => { setModalState(prev => ({ ...prev, addCert: false })); setEditingItem(null); }}
+                onAdd={handleSaveCertification}
+                initialData={editingItem}
+            />
+
+            <AddProjectModal
+                isOpen={modalState.addProject}
+                onClose={() => { setModalState(prev => ({ ...prev, addProject: false })); setEditingItem(null); }}
+                onAdd={handleSaveProject}
+                initialData={editingItem}
+            />
+
+            <AddSocialsModal
+                isOpen={modalState.addSocial}
+                onClose={() => setModalState(prev => ({ ...prev, addSocial: false }))}
+                onAdd={handleAddSocial}
+            />
+
+            <EditSocialsModal
+                isOpen={modalState.editSocial}
+                onClose={() => setModalState(prev => ({ ...prev, editSocial: false }))}
+                socials={profile.socials}
+                onUpdate={handleUpdateSocial}
+                onDelete={handleDeleteSocial}
+            />
+
+            <CareerVisionModal
+                isOpen={modalState.careerVision}
+                onClose={() => setModalState(prev => ({ ...prev, careerVision: false }))}
+                vision={profile.careerVision}
+                onUpdate={handleUpdateCareerVision}
             />
 
         </div>

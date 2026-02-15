@@ -1,7 +1,22 @@
-import React from 'react';
-import { Building2, Plus, MoreVertical } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Building2, Plus, MoreVertical, Edit2, Trash2 } from 'lucide-react';
 
-const Experience = ({ experience, onAdd }) => {
+const Experience = ({ experience, onAdd, onEdit, onDelete }) => {
+    const [activeMenu, setActiveMenu] = useState(null);
+    const menuRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setActiveMenu(null);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
     return (
         <div className="card">
             <div className="card-title">
@@ -13,7 +28,7 @@ const Experience = ({ experience, onAdd }) => {
 
             <div className="flex flex-col gap-6">
                 {experience.map((exp, index) => (
-                    <div key={index} className="flex gap-4">
+                    <div key={exp._id || index} className="flex gap-4" style={{ position: 'relative' }}>
                         {/* Icon */}
                         <div style={{
                             width: '48px', height: '48px',
@@ -31,15 +46,64 @@ const Experience = ({ experience, onAdd }) => {
                         <div style={{ flex: 1 }}>
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#111827', marginBottom: '2px' }}>{exp.role}</h4>
-                                    <p style={{ fontSize: '0.9rem', color: '#4b5563' }}>{exp.company}, {exp.location}</p>
-                                    <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '4px' }}>
+                                    <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-main)', marginBottom: '2px' }}>{exp.role}</h4>
+                                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{exp.company}, {exp.location}</p>
+                                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
                                         Started: {exp.startDate} - Ended: {exp.endDate}
                                     </p>
                                 </div>
-                                <button style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer' }}>
-                                    <MoreVertical size={18} />
-                                </button>
+                                <div style={{ position: 'relative' }}>
+                                    <button
+                                        onClick={() => setActiveMenu(activeMenu === (exp._id || index) ? null : (exp._id || index))}
+                                        style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: '4px' }}
+                                    >
+                                        <MoreVertical size={18} />
+                                    </button>
+
+                                    {activeMenu === (exp._id || index) && (
+                                        <div ref={menuRef} style={{
+                                            position: 'absolute',
+                                            right: 0,
+                                            top: '100%',
+                                            background: 'var(--card-bg)',
+                                            border: '1px solid var(--border-color)',
+                                            borderRadius: '6px',
+                                            boxShadow: 'var(--shadow-sm)',
+                                            zIndex: 10,
+                                            minWidth: '120px',
+                                            overflow: 'hidden'
+                                        }}>
+                                            <button
+                                                onClick={() => { onEdit(exp); setActiveMenu(null); }}
+                                                style={{
+                                                    display: 'flex', alignItems: 'center', gap: '8px',
+                                                    width: '100%', padding: '8px 12px',
+                                                    background: 'none', border: 'none',
+                                                    textAlign: 'left', cursor: 'pointer',
+                                                    fontSize: '0.875rem', color: 'var(--text-main)'
+                                                }}
+                                                onMouseEnter={(e) => e.target.style.background = 'var(--bg-color)'}
+                                                onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                                            >
+                                                <Edit2 size={14} /> Edit
+                                            </button>
+                                            <button
+                                                onClick={() => { onDelete(exp._id); setActiveMenu(null); }}
+                                                style={{
+                                                    display: 'flex', alignItems: 'center', gap: '8px',
+                                                    width: '100%', padding: '8px 12px',
+                                                    background: 'none', border: 'none',
+                                                    textAlign: 'left', cursor: 'pointer',
+                                                    fontSize: '0.875rem', color: '#ef4444'
+                                                }}
+                                                onMouseEnter={(e) => e.target.style.background = 'var(--bg-color)'}
+                                                onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                                            >
+                                                <Trash2 size={14} /> Delete
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>

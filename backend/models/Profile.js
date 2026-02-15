@@ -34,6 +34,15 @@ const profileSchema = new mongoose.Schema({
         endDate: { type: String, required: true }
     }],
 
+    projects: [{
+        title: { type: String, required: true },
+        description: { type: String, required: true },
+        technologies: [{ type: String }],
+        link: { type: String },
+        githubLink: { type: String },
+        imageUrl: { type: String }
+    }],
+
     certifications: [{
         title: { type: String, required: true },
         provider: { type: String, required: true },
@@ -41,11 +50,23 @@ const profileSchema = new mongoose.Schema({
         link: { type: String }
     }],
 
+    socials: {
+        type: Map,
+        of: String,
+        default: {}
+    },
+
+    meta: {
+        resumeDownloads: { type: Number, default: 0 },
+        profileViews: { type: Number, default: 0 }
+    },
+
     careerVision: {
-        title: { type: String },
-        currentRole: { type: String },
-        targetDomain: { type: String },
-        inspiredBy: { type: String }
+        description: { type: String }, // What Best Describes You?
+        aspiration: { type: String },  // What Is Your Long-Term Career Aspiration?
+        field: { type: String },       // Aspirational Field
+        inspiration: { type: String }, // Who Is Your Inspiration?
+        currentAim: { type: String }   // What Are You Aiming For Right Now?
     }
 }, { timestamps: true });
 

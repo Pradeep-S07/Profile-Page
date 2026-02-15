@@ -1,13 +1,31 @@
 import React, { useState } from 'react';
-import { Mail, Download, Share2, MoreVertical, Edit, Link, Eye, Settings } from 'lucide-react';
+import { Mail, Download, Share2, MoreVertical, Edit, Link, Eye, Settings, Linkedin, Github, Twitter, Instagram, Globe } from 'lucide-react';
 
-const ProfileHeader = ({ profile, onEdit }) => {
+import { trackResumeDownload } from '../services/api';
+
+const ProfileHeader = ({ profile, onEdit, onAddSocial, onEditSocial, onCareerVision }) => {
     const [showDropdown, setShowDropdown] = useState(false);
+    const [downloads, setDownloads] = useState(profile?.meta?.resumeDownloads || 0);
 
     if (!profile) return null;
 
+    const handleDownloadResume = async (e) => {
+        // Allow default behavior (download) but also track it
+        try {
+            const res = await trackResumeDownload();
+            if (res.data && res.data.downloads) {
+                setDownloads(res.data.downloads);
+            }
+        } catch (error) {
+            console.error("Error tracking download", error);
+        }
+    };
+
+    // ... rest of imports
+
     return (
         <div className="card" style={{ padding: '32px' }}>
+            {/* ... header top row ... */}
             <div className="header-top-row">
                 {/* Avatar */}
                 <div style={{ flexShrink: 0 }}>
@@ -27,6 +45,35 @@ const ProfileHeader = ({ profile, onEdit }) => {
                                 <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', fontWeight: '400', marginLeft: '8px' }}>
                                     ( {profile.role} )
                                 </span>
+                                {/* Social Icons */}
+                                {profile.socials && (
+                                    <span style={{ marginLeft: '12px', display: 'inline-flex', gap: '8px', verticalAlign: 'middle' }}>
+                                        {Object.entries(profile.socials).map(([platform, link]) => {
+                                            if (!link) return null;
+                                            const Icon = {
+                                                LinkedIn: Linkedin,
+                                                GitHub: Github,
+                                                Twitter: Twitter,
+                                                Instagram: Instagram,
+                                                Website: Globe
+                                            }[platform] || Globe;
+
+                                            return (
+                                                <a
+                                                    key={platform}
+                                                    href={link}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    style={{ color: 'var(--text-secondary)', transition: 'color 0.2s' }}
+                                                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--primary)'}
+                                                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
+                                                >
+                                                    <Icon size={18} />
+                                                </a>
+                                            );
+                                        })}
+                                    </span>
+                                )}
                             </h1>
                             <p className="text-gray text-sm" style={{ marginBottom: '12px' }}>{profile.location}</p>
                         </div>
@@ -52,25 +99,20 @@ const ProfileHeader = ({ profile, onEdit }) => {
                                     }}>
                                         <Edit size={16} color="#3b82f6" /> Edit Profile
                                     </button>
-                                    <button className="dropdown-item" style={{
-                                        display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-main)', textAlign: 'left'
-                                    }}>
-                                        <Share2 size={16} color="#3b82f6" /> Share Profile
-                                    </button>
-                                    <button className="dropdown-item" style={{
+                                    <button onClick={() => { setShowDropdown(false); onAddSocial(); }} className="dropdown-item" style={{
                                         display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-main)', textAlign: 'left'
                                     }}>
                                         <Link size={16} color="#3b82f6" /> Add Socials
                                     </button>
-                                    <button className="dropdown-item" style={{
+                                    <button onClick={() => { setShowDropdown(false); onEditSocial(); }} className="dropdown-item" style={{
+                                        display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-main)', textAlign: 'left'
+                                    }}>
+                                        <Link size={16} color="#3b82f6" /> Edit Socials
+                                    </button>
+                                    <button onClick={() => { setShowDropdown(false); onCareerVision(); }} className="dropdown-item" style={{
                                         display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-main)', textAlign: 'left'
                                     }}>
                                         <Eye size={16} color="#3b82f6" /> Career Vision
-                                    </button>
-                                    <button className="dropdown-item" style={{
-                                        display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-main)', textAlign: 'left'
-                                    }}>
-                                        <Settings size={16} color="#3b82f6" /> Settings
                                     </button>
                                 </div>
                             )}
@@ -86,9 +128,21 @@ const ProfileHeader = ({ profile, onEdit }) => {
                             <Mail size={16} /> {profile.email}
                         </a>
                         <div style={{ marginTop: '8px' }}>
-                            <button className="btn-primary">
-                                <Download size={16} /> Download Resume
-                            </button>
+                            {profile.resumeLink && profile.resumeLink !== '#' ? (
+                                <a
+                                    href={profile.resumeLink}
+                                    download="Resume"
+                                    className="btn-primary"
+                                    onClick={handleDownloadResume}
+                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}
+                                >
+                                    <Download size={16} /> Download Resume
+                                </a>
+                            ) : (
+                                <button className="btn-primary" disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+                                    <Download size={16} /> Resume Not Available
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -120,7 +174,16 @@ const ProfileHeader = ({ profile, onEdit }) => {
                                 <div style={{ fontWeight: '600', color: 'var(--text-main)' }}>{profile.points}</div>
                             </div>
                         </div>
-                        <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px', textAlign: 'center' }}>
+
+                        {/* Analytics Section */}
+                        <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px', marginTop: '12px' }}>
+                            <div className="flex justify-between items-center">
+                                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Resume Downloads</span>
+                                <span style={{ fontWeight: '600', color: 'var(--primary)' }}>{downloads}</span>
+                            </div>
+                        </div>
+
+                        <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px', marginTop: '12px', textAlign: 'center' }}>
                             <a href="#" style={{ color: '#d97706', fontSize: '0.875rem', fontWeight: '500', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                                 View My Rewards <span style={{ fontSize: '12px' }}>›</span>
                             </a>
